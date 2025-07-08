@@ -21,7 +21,7 @@
 
 ### 搜索功能
 
-- `/pixiv search<标签>` - 标签搜索插画
+- `/pixiv search <标签>` - 标签搜索插画
 - `/pixiv deepsearch <标签>` - 深度搜索更多相关作品
 - `/pixiv and <标签>` - 与搜索 (同时包含所有标签)
 - `/pixiv user_search <用户名>` - 搜索用户

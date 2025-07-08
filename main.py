@@ -376,8 +376,8 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：搜索插画时发生错误 - {e}")
             yield event.plain_result(f"搜索插画时发生错误: {str(e)}")
 
-    @command("pixiv_help")
-    async def pixiv_help(self, event: AstrMessageEvent):
+    @pixiv.command("help")
+    async def help(self, event: AstrMessageEvent):
         """生成并返回帮助信息"""
 
         help_text = """# Pixiv 搜索插件使用帮助
@@ -502,7 +502,7 @@ class PixivSearchPlugin(Star):
 ## 参数说明
 - `mode`: 排行榜模式，可选值：
   - 常规模式: day, week, month, day_male, day_female, week_original, week_rookie, day_manga
-  - R18模式(需开启R18): day_r18, day_male_r18, day_female_r18, week_r18, week_r18g
+  - R18模式 (需开启 R18): day_r18, day_male_r18, day_female_r18, week_r18, week_r18g
 - `date`: 日期，格式为 YYYY-MM-DD，可选，默认为最新
 
 ## 示例
@@ -1185,11 +1185,7 @@ class PixivSearchPlugin(Star):
 
     @pixiv.command("deepsearch")
     async def deepsearch(self, event: AstrMessageEvent, tags: str):
-        """
-        深度搜索 Pixiv 插画，通过翻页获取多页结果
-        用法: /pixiv deepsearch <标签1>,<标签2>,...
-        注意: 翻页深度由配置中的 deep_search_depth 参数控制
-        """
+        """深度搜索 Pixiv 插画，通过翻页获取多页结果"""
         # 验证用户输入
         if not tags or tags.strip().lower() == "help":
             yield event.plain_result(

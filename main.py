@@ -21,8 +21,8 @@ from .tag import build_detail_message, filter_illusts_with_reason
     "pixiv_search",
     "vmoranv",
     "Pixiv 图片搜索",
-    "1.2.3",
-    "https://github.com/vmoranv/astrbot_plugin_pixiv_search",
+    "2.0.0",
+    "https://github.com/Omnisch/astrbot_plugin_pixiv_search",
 )
 class PixivSearchPlugin(Star):
     """
@@ -128,10 +128,10 @@ class PixivSearchPlugin(Star):
         """返回插件元数据"""
         return {
             "name": "pixiv_search",
-            "author": "vmoranv",
+            "author": "Omnisch",
             "description": "Pixiv 图片搜索",
-            "version": "1.2.3",
-            "homepage": "https://github.com/vmoranv/astrbot_plugin_pixiv_search",
+            "version": "2.0.0",
+            "homepage": "https://github.com/Omnisch/astrbot_plugin_pixiv_search",
         }
 
     async def _authenticate(self) -> bool:

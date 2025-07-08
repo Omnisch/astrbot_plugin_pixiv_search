@@ -20,24 +20,29 @@
 ## 🎯 主要功能
 
 ### 搜索功能
-- `/pixiv <标签>` - 标签搜索插画
-- `/pixiv_deepsearch <标签>` - 深度搜索更多相关作品
-- `/pixiv_and <标签>` - 与搜索(同时包含所有标签)
-- `/pixiv_user_search <用户名>` - 搜索用户
-- `/pixiv_novel <标签>` - 搜索小说
+
+- `/pixiv search<标签>` - 标签搜索插画
+- `/pixiv deepsearch <标签>` - 深度搜索更多相关作品
+- `/pixiv and <标签>` - 与搜索 (同时包含所有标签)
+- `/pixiv user_search <用户名>` - 搜索用户
+- `/pixiv novel <标签>` - 搜索小说
 
 ### 排除 tag
-- `-<tag>` - 排除包含 `<tag>` 的插画(仅在 /pixiv, /pixiv_novel, /pixiv_deepsearch, /pixiv_and 中有效)
+
+- `-<tag>` - 排除包含 `<tag>` 的插画 (仅在 /pixiv, /pixiv_novel, /pixiv_deepsearch, /pixiv_and 中有效)
 
 ### 内容获取
-- `/pixiv_recommended` - 获取推荐作品
-- `/pixiv_ranking [模式] [日期]` - 排行榜作品
-- `/pixiv_trending_tags` - 获取趋势标签
+
+- `/pixiv recommended` - 推荐作品
+- `/pixiv ranking [模式] [日期]` - 排行榜作品
+- `/pixiv user_illust <用户 ID>` - 用户作品
+- `/pixiv related <作品 ID>` - 相关作品推荐
+- `/pixiv trending_tags` - 趋势标签
 
 ### 详情查询
-- `/pixiv_specific <作品ID>` - 指定作品详情
-- `/pixiv_user_detail <用户ID>` - 用户详细信息
-- `/pixiv_related <作品ID>` - 相关作品推荐
+
+- `/pixiv id <作品 ID>` - 指定作品详情
+- `/pixiv uid <用户 ID>` - 用户详细信息
 
 ## 🚀 快速开始
 
@@ -50,12 +55,14 @@
 ### 安装步骤
 
 1. **克隆插件到 AstrBot 插件目录**
+
    ```bash
    cd /path/to/astrbot/data/plugins
    git clone https://github.com/vmoranv/astrbot_plugin_pixiv_search.git
    ```
 
 2. **确认依赖文件**
+
    ```txt
    # requirements.txt
    pixivpy3>=3.0.0
@@ -70,9 +77,9 @@
 2. 进入 `插件管理` -> 找到 Pixiv 搜索插件
 3. 点击 `插件配置`，填写以下信息：
    - **Refresh Token**: 必填，用于 Pixiv API 认证
-   - **R18 过滤模式**: 过滤R18/允许R18/仅R18
-   - **返回图片数量**: 1-10张，默认1张
-   - **AI作品显示**: 是否显示AI生成作品
+   - **R18 过滤模式**: 过滤R18 / 允许R18 / 仅R18
+   - **返回图片数量**: 1-10 张，默认 1 张
+   - **AI作品显示**: 是否显示 AI 生成作品
    - **其他选项**: 详情显示、文件转发等
 
 4. 保存配置
@@ -80,6 +87,7 @@
 ### 获取 Refresh Token
 
 参考以下资源获取 Pixiv `refresh_token`:
+
 - [pixivpy3 官方文档](https://pypi.org/project/pixivpy3/)
 - [Pixiv OAuth 教程](https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362)
 
@@ -91,19 +99,19 @@
 /pixiv 茉莉安,-ntr
 
 # 高级搜索  
-/pixiv_deepsearch 原神,风景
-/pixiv_and 初音ミク,可爱
+/pixiv deepsearch 原神,风景
+/pixiv and 初音ミク,可爱
 
 # 获取推荐和排行榜
-/pixiv_recommended
-/pixiv_ranking daily
+/pixiv recommended
+/pixiv ranking daily
 
 # 用户相关
-/pixiv_user_search 某个画师名
-/pixiv_user_detail 123456
+/pixiv user_search 某个画师名
+/pixiv uid 123456
 
 # 获取帮助
-/pixiv_help
+/pixiv help
 ```
 
 ## ⚙️ 配置选项

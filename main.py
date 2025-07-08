@@ -6,11 +6,11 @@ import aiofiles
 import uuid
 import os
 
-from astrbot.api.event import AstrMessageEvent
-from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
-from astrbot.api.message_components import Image, Plain, Node, Nodes
 from astrbot.api.all import command
+from astrbot.api.event import filter, AstrMessageEvent
+from astrbot.api.message_components import Image, Plain, Node, Nodes
+from astrbot.api.star import Context, Star, register
 from pixivpy3 import AppPixivAPI, PixivError
 
 from .config import TEMP_DIR, clean_temp_dir
@@ -29,7 +29,7 @@ class PixivSearchPlugin(Star):
     AstrBot 插件，用于通过 Pixiv API 搜索插画。
     配置通过 AstrBot WebUI 进行管理。
     用法:
-        /pixiv <标签1>,<标签2>,...  搜索 Pixiv 插画
+        /pixiv <标签 1>,<标签 2>,...  搜索 Pixiv 插画
         /pixiv help                 查看帮助信息
     可在配置中设置认证信息、返回数量和 R18 过滤模式。
     """
@@ -52,8 +52,8 @@ class PixivSearchPlugin(Star):
         self._refresh_task: asyncio.Task = None
         self.AUTH_ERROR_MSG = (
             "Pixiv API 认证失败，请检查配置中的凭据信息。\n"
-            "先带脑子配置代理->[Astrbot代理配置教程](https://astrbot.app/config/astrbot-config.html#http-proxy);\n"
-            "再填入refresh_token->**Pixiv Refresh Token**: 必填，用于 API 认证。获取方法请参考 "
+            "先带脑子配置代理 -> [Astrbot 代理配置教程](https://astrbot.app/config/astrbot-config.html#http-proxy);\n"
+            "再填入 refresh_token -> **Pixiv Refresh Token**: 必填，用于 API 认证。获取方法请参考 "
             "[pixivpy3 文档](https://pypi.org/project/pixivpy3/) 或[这里](https://gist.github.com/karakoo/5e7e0b1f3cc74cbcb7fce1c778d3709e)。"
         )
         
@@ -162,13 +162,13 @@ class PixivSearchPlugin(Star):
         show_details: bool = True,
     ):
         """
-        通用Pixiv图片下载与发送函数，自动选择最佳图片链接（original>large>medium），采用本地文件缓存，自动清理缓存目录，发送后删除临时文件。
+        通用 Pixiv 图片下载与发送函数，自动选择最佳图片链接（original > large > medium），采用本地文件缓存，自动清理缓存目录，发送后删除临时文件。
 
         参数：
             event: 消息事件对象（AstrMessageEvent）
-            illust: Pixiv插画对象
+            illust: Pixiv 插画对象
             detail_message: 附加文本（如作品详情，可选，str）
-            show_details: 是否发送详情文本（bool，默认True）
+            show_details: 是否发送详情文本（bool，默认 True）
         返回：
             通过 yield 方式返回消息结果对象，供主命令 yield 派发
         """
@@ -276,20 +276,24 @@ class PixivSearchPlugin(Star):
                 nodes_obj = Nodes(nodes=nodes_list)
                 yield event.chain_result([nodes_obj])
 
-    @command("pixiv")
-    async def pixiv(self, event: AstrMessageEvent, tags: str = ""):
-        """处理 /pixiv 命令，默认为标签搜索功能"""
+    @filter.command_group("pixiv")
+    def pixiv(self):
+        pass
+
+    @pixiv.command("search")
+    async def search(self, event: AstrMessageEvent, tags: str = ""):
+        """标签搜索"""
         # 清理标签字符串，并检查是否为空或为 "help"
         cleaned_tags = tags.strip()
 
         if cleaned_tags.lower() == "help":
-            yield self.pixiv_help(event)
+            yield self.help(event)
             return
 
         if not cleaned_tags:
             logger.info("Pixiv 插件：用户未提供搜索标签或标签为空，返回帮助信息。")
             yield event.plain_result(
-                "请输入要搜索的标签。使用 `/pixiv_help` 查看帮助。\n" + self.AUTH_ERROR_MSG
+                "请输入要搜索的标签。使用 `/pixiv help` 查看帮助。\n" + self.AUTH_ERROR_MSG
             )
             return
 
@@ -379,24 +383,24 @@ class PixivSearchPlugin(Star):
         help_text = """# Pixiv 搜索插件使用帮助
 
 ## 基本命令
-- `/pixiv <标签1>,<标签2>,...` - 搜索含有任意指定标签的插画 (OR 搜索)
-- `/pixiv_help` - 显示此帮助信息
+- `/pixiv search <标签 1>,<标签 2>,...` - 搜索含有任意指定标签的插画 (OR 搜索)
+- `/pixiv help` - 显示此帮助信息
 
 ## 排除标签
-- 使用 `-<标签>` 来排除特定标签。例如：`/pixiv 恋爱,-ntr`
+- 使用 `-<标签>` 来排除特定标签。例如：`/pixiv search 恋爱,-ntr`
 
 ## 高级命令
-- `/pixiv_recommended` - 获取推荐作品
-- `/pixiv_specific <作品ID>` - 获取指定作品详情
-- `/pixiv_user_search <用户名>` - 搜索Pixiv用户
-- `/pixiv_user_detail <用户ID>` - 获取指定用户的详细信息
-- `/pixiv_user_illusts <用户ID>` - 获取指定用户的作品
-- `/pixiv_novel <标签1>,<标签2>,...` - 搜索小说 (OR 搜索)
-- `/pixiv_ranking [mode] [date]` - 获取排行榜作品
-- `/pixiv_related <作品ID>` - 获取与指定作品相关的其他作品
-- `/pixiv_trending_tags` - 获取当前的插画趋势标签
-- `/pixiv_deepsearch <标签1>,<标签2>,...` - 深度搜索插画 (OR 搜索，跨多页)
-- `/pixiv_and <标签1>,<标签2>,...` - 深度搜索同时包含所有指定标签的插画 (AND 搜索，跨多页)
+- `/pixiv recommended` - 获取推荐作品
+- `/pixiv id <作品 ID>` - 获取指定作品详情
+- `/pixiv user_search <用户名>` - 搜索 Pixiv 用户
+- `/pixiv uid <用户 ID>` - 获取指定用户的详细信息
+- `/pixiv user_illusts <用户 ID>` - 获取指定用户的作品
+- `/pixiv novel <标签 1>,<标签 2>,...` - 搜索小说 (OR 搜索)
+- `/pixiv ranking [mode] [date]` - 获取排行榜作品
+- `/pixiv related <作品 ID>` - 获取与指定作品相关的其他作品
+- `/pixiv trending_tags` - 获取当前的插画趋势标签
+- `/pixiv deepsearch <标签 1>,<标签 2>,...` - 深度搜索插画 (OR 搜索，跨多页)
+- `/pixiv and <标签 1>,<标签 2>,...` - 深度搜索同时包含所有指定标签的插画 (AND 搜索，跨多页)
 
 ## 配置信息
 - 当前 R18 模式: {r18_mode}
@@ -407,9 +411,9 @@ class PixivSearchPlugin(Star):
 - 超过 {forward_threshold} 张时自动使用消息转发
 - 是否通过文件转发: {is_fromfilesystem}
 ## 注意事项
-- OR 搜索 (如 /pixiv, /pixiv_deepsearch) 使用英文逗号(,)分隔标签
-- AND 搜索 (/pixiv_and) 使用英文逗号(,)分隔标签
-- 获取用户作品或相关作品时，ID必须为数字
+- OR 搜索 (如 /pixiv, /pixiv deepsearch) 使用英文逗号 (,) 分隔标签
+- AND 搜索 (/pixiv and) 使用英文逗号 (,) 分隔标签
+- 获取用户作品或相关作品时，ID 必须为数字
 - 日期必须采用 YYYY-MM-DD 格式
 - 带脑子配置代理->[Astrbot代理配置教程](https://astrbot.app/config/astrbot-config.html#http-proxy)
 - 填入refresh_token->**Pixiv Refresh Token**: 必填，用于 API 认证。获取方法请参考 [pixivpy3 文档](https://pypi.org/project/pixivpy3/) 或[这里](https://gist.github.com/karakoo/5e7e0b1f3cc74cbcb7fce1c778d3709e)。
@@ -427,8 +431,8 @@ class PixivSearchPlugin(Star):
 
         yield event.plain_result(help_text)
 
-    @command("pixiv_recommended")
-    async def pixiv_recommended(self, event: AstrMessageEvent, args: str = ""):
+    @pixiv.command("recommended")
+    async def recommended(self, event: AstrMessageEvent):
         """获取 Pixiv 推荐作品"""
 
         # 验证是否已认证
@@ -483,8 +487,8 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：获取推荐作品时发生错误 - {e}")
             yield event.plain_result(f"获取推荐作品时发生错误: {str(e)}")
 
-    @command("pixiv_ranking")
-    async def pixiv_ranking(self, event: AstrMessageEvent, args: str = ""):
+    @pixiv.command("ranking")
+    async def ranking(self, event: AstrMessageEvent, args: str = ""):
         """获取 Pixiv 排行榜作品"""
         args_list = args.strip().split() if args.strip() else []
 
@@ -493,7 +497,7 @@ class PixivSearchPlugin(Star):
             help_text = """# Pixiv 排行榜查询
 
 ## 命令格式
-`/pixiv_ranking [mode] [date]`
+`/pixiv ranking [mode] [date]`
 
 ## 参数说明
 - `mode`: 排行榜模式，可选值：
@@ -502,9 +506,9 @@ class PixivSearchPlugin(Star):
 - `date`: 日期，格式为 YYYY-MM-DD，可选，默认为最新
 
 ## 示例
-- `/pixiv_ranking week` - 获取每周排行榜
-- `/pixiv_ranking day 2023-05-01` - 获取2023年5月1日的每日排行榜
-- `/pixiv_ranking day_r18` - 获取R18每日排行榜（需开启R18模式）
+- `/pixiv ranking week` - 获取每周排行榜
+- `/pixiv ranking day 2023-05-01` - 获取 2023 年 5 月 1 日的每日排行榜
+- `/pixiv ranking day_r18` - 获取 R18 每日排行榜（需开启 R18 模式）
 """
             yield event.plain_result(help_text)
             return
@@ -532,7 +536,7 @@ class PixivSearchPlugin(Star):
 
         if mode not in valid_modes:
             yield event.plain_result(
-                f"无效的排行榜模式: {mode}\n请使用 `/pixiv_ranking help` 查看支持的模式"
+                f"无效的排行榜模式: {mode}\n请使用 `/pixiv ranking help` 查看支持的模式"
             )
             return
 
@@ -612,28 +616,28 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：获取排行榜时发生错误 - {e}")
             yield event.plain_result(f"获取排行榜时发生错误: {str(e)}")
 
-    @command("pixiv_related")
-    async def pixiv_related(self, event: AstrMessageEvent, illust_id: str = ""):
+    @pixiv.command("related")
+    async def related(self, event: AstrMessageEvent, illust_id: str = ""):
         """获取与指定作品相关的其他作品"""
         # 检查参数是否为空或为 help
         if not illust_id.strip() or illust_id.strip().lower() == "help":
             help_text = """# Pixiv 相关作品
 
 ## 命令格式
-`/pixiv_related <作品ID>`
+`/pixiv related <作品 ID>`
 
 ## 参数说明
-- `作品ID`: Pixiv 作品的数字ID
+- `作品 ID`: Pixiv 作品的数字 ID
 
 ## 示例
-- `/pixiv_related 12345678` - 获取ID为12345678的作品的相关作品
+- `/pixiv related 12345678` - 获取 ID 为 12345678 的作品的相关作品
 """
             yield event.plain_result(help_text)
             return
 
-        # 验证作品ID是否为数字
+        # 验证作品 ID 是否为数字
         if not illust_id.isdigit():
-            yield event.plain_result(f"作品ID必须是数字: {illust_id}")
+            yield event.plain_result(f"作品 ID 必须是数字: {illust_id}")
             return
 
         # 验证是否已认证
@@ -689,22 +693,22 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：获取相关作品时发生错误 - {e}")
             yield event.plain_result(f"获取相关作品时发生错误: {str(e)}")
 
-    @command("pixiv_user_search")
-    async def pixiv_user_search(self, event: AstrMessageEvent, username: str = ""):
+    @pixiv.command("user_search")
+    async def user_search(self, event: AstrMessageEvent, username: str = ""):
         """搜索 Pixiv 用户"""
         # 检查参数是否为空或为 help
         if not username.strip() or username.strip().lower() == "help":
             help_text = """# Pixiv 用户搜索
 
 ## 命令格式
-`/pixiv_user_search <用户名>`
+`/pixiv user_search <用户名>`
 
 ## 参数说明
 - `用户名`: 要搜索的 Pixiv 用户名
 
 ## 示例
-- `/pixiv_user_search 初音ミク` - 搜索名称包含"初音ミク"的用户
-- `/pixiv_user_search gomzi` - 搜索名称包含"gomzi"的用户
+- `/pixiv user_search 初音ミク` - 搜索名称包含 "初音ミク" 的用户
+- `/pixiv user_search gomzi` - 搜索名称包含 "gomzi" 的用户
 """
             yield event.plain_result(help_text)
             return
@@ -733,7 +737,7 @@ class PixivSearchPlugin(Star):
 
             # 构建用户信息
             user_info = f"用户名: {user.name}\n"
-            user_info += f"用户ID: {user.id}\n"
+            user_info += f"用户 ID: {user.id}\n"
             user_info += f"账号: @{user.account}\n"
             user_info += f"个人主页: https://www.pixiv.net/users/{user.id}"
 
@@ -766,30 +770,30 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：搜索用户时发生错误 - {e}")
             yield event.plain_result(f"搜索用户时发生错误: {str(e)}")
 
-    @command("pixiv_user_detail")
-    async def pixiv_user_detail(self, event: AstrMessageEvent, user_id: str = ""):
-        """获取 Pixiv 用户详情"""
+    @pixiv.command("uid")
+    async def uid(self, event: AstrMessageEvent, user_id: str = ""):
+        """获取指定用户详情"""
         # 检查参数是否为空或为 help
         if not user_id.strip() or user_id.strip().lower() == "help":
             help_text = """# Pixiv 用户详情
 
 ## 命令格式
-`/pixiv_user_detail <用户ID>`
+`/pixiv uid <用户 ID>`
 
 ## 参数说明
-- `用户ID`: Pixiv 用户的数字ID
+- `用户 ID`: Pixiv 用户的数字 ID
 
 ## 示例
-- `/pixiv_user_detail 660788` - 获取ID为660788的用户详情
+- `/pixiv uid 660788` - 获取 ID 为 660788 的用户详情
 """
             yield event.plain_result(help_text)
             return
 
         logger.info(f"Pixiv 插件：正在获取用户详情 - ID: {user_id}")
 
-        # 验证用户ID是否为数字
+        # 验证用户 ID 是否为数字
         if not user_id.isdigit():
-            yield event.plain_result(f"用户ID必须是数字: {user_id}")
+            yield event.plain_result(f"用户 ID 必须是数字: {user_id}")
             return
 
         # 验证是否已认证
@@ -799,7 +803,7 @@ class PixivSearchPlugin(Star):
 
         try:
             # 调用 Pixiv API 获取用户详情
-            json_result = self.client.user_detail(user_id)
+            json_result = self.client.uid(user_id)
             if not json_result or not hasattr(json_result, "user"):
                 yield event.plain_result(f"未找到用户 - ID: {user_id}")
                 return
@@ -809,7 +813,7 @@ class PixivSearchPlugin(Star):
 
             # 构建用户详情信息
             detail_info = f"用户名: {user.name}\n"
-            detail_info += f"用户ID: {user.id}\n"
+            detail_info += f"用户 ID: {user.id}\n"
             detail_info += f"账号: @{user.account}\n"
 
             if profile:
@@ -833,21 +837,21 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：获取用户详情时发生错误 - {e}")
             yield event.plain_result(f"获取用户详情时发生错误: {str(e)}")
 
-    @command("pixiv_user_illusts")
-    async def pixiv_user_illusts(self, event: AstrMessageEvent, user_id: str = ""):
+    @pixiv.command("user_illusts")
+    async def user_illusts(self, event: AstrMessageEvent, user_id: str = ""):
         """获取指定用户的作品"""
         # 检查参数是否为空或为 help
         if not user_id.strip() or user_id.strip().lower() == "help":
             help_text = """# Pixiv 用户作品
 
 ## 命令格式
-`/pixiv_user_illusts <用户ID>`
+`/pixiv user_illusts <用户 ID>`
 
 ## 参数说明
-- `用户ID`: Pixiv 用户的数字ID
+- `用户 ID`: Pixiv 用户的数字 ID
 
 ## 示例
-- `/pixiv_user_illusts 660788` - 获取ID为660788的用户的作品
+- `/pixiv user_illusts 660788` - 获取 ID 为 660788 的用户的作品
 """
             yield event.plain_result(help_text)
             return
@@ -866,7 +870,7 @@ class PixivSearchPlugin(Star):
 
         try:
             # 获取用户信息以显示用户名
-            user_detail_result = self.client.user_detail(int(user_id))
+            user_detail_result = self.client.uid(int(user_id))
             user_name = (
                 user_detail_result.user.name
                 if user_detail_result and user_detail_result.user
@@ -919,24 +923,24 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：获取用户作品时发生错误 - {e}")
             yield event.plain_result(f"获取用户作品时发生错误: {str(e)}")
 
-    @command("pixiv_novel")
-    async def pixiv_novel(self, event: AstrMessageEvent, tags: str):
-        """处理 /pixiv_novel 命令，搜索 Pixiv 小说"""
+    @pixiv.command("novel")
+    async def novel(self, event: AstrMessageEvent, tags: str):
+        """搜索 Pixiv 小说"""
         # 检查参数是否为空或为 help
         if not tags.strip() or tags.strip().lower() == "help":
             help_text = """# Pixiv 小说搜索
 
     ## 命令格式
-    `/pixiv_novel <标签1>,<标签2>,...`
+    `/pixiv novel <标签1>,<标签2>,...`
 
     ## 参数说明
     - `标签`: 搜索的标签，多个标签用英文逗号分隔
     - 支持排除标签功能，使用 -<标签> 来排除特定标签
 
     ## 示例
-    - `/pixiv_novel 恋愛` - 搜索标签为"恋愛"的小说
-    - `/pixiv_novel 百合,GL` - 搜索同时包含"百合"和"GL"标签的小说
-    - `/pixiv_novel 恋愛,-NTR` - 搜索包含"恋愛"但排除"NTR"的小说
+    - `/pixiv novel 恋愛` - 搜索标签为"恋愛"的小说
+    - `/pixiv novel 百合,GL` - 搜索同时包含"百合"和"GL"标签的小说
+    - `/pixiv novel 恋愛,-NTR` - 搜索包含"恋愛"但排除"NTR"的小说
     """
             yield event.plain_result(help_text)
             return
@@ -1009,8 +1013,8 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：搜索小说时发生错误 - {e}")
             yield event.plain_result(f"搜索小说时发生错误: {str(e)}")
 
-    @command("pixiv_trending_tags")
-    async def pixiv_trending_tags(self, event: AstrMessageEvent):
+    @pixiv.command("trending_tags")
+    async def trending_tags(self, event: AstrMessageEvent):
         """获取 Pixiv 插画趋势标签"""
         logger.info("Pixiv 插件：正在获取插画趋势标签...")
 
@@ -1053,18 +1057,18 @@ class PixivSearchPlugin(Star):
             logger.error(f"Pixiv 插件：获取趋势标签时发生错误 - {e}")
             yield event.plain_result(f"获取趋势标签时发生错误: {str(e)}")
 
-    @command("pixiv_config")
-    async def pixiv_config(
+    @pixiv.command("config")
+    async def config(
         self, event: AstrMessageEvent, arg1: str = "", arg2: str = ""
     ):
         """查看或动态设置 Pixiv 插件参数（除 refresh_token）。"""
         help_text = """# Pixiv 配置命令帮助
 
 ## 命令格式
-/pixiv_config show
-/pixiv_config <参数名>
-/pixiv_config <参数名> <值>
-/pixiv_config help
+/pixiv config show
+/pixiv config <参数名>
+/pixiv config <参数名> <值>
+/pixiv config help
 
 ## 支持参数
 - r18_mode: 过滤_R18, 允许_R18, 仅_R18
@@ -1078,9 +1082,9 @@ class PixivSearchPlugin(Star):
 - refresh_token_interval_minutes: 0-10080
 
 ## 示例
-- /pixiv_config show
-- /pixiv_config r18_mode 仅_R18
-- /pixiv_config show_filter_result false
+- /pixiv config show
+- /pixiv config r18_mode 仅_R18
+- /pixiv config show_filter_result false
 """
         args = []
         if arg1:
@@ -1179,17 +1183,17 @@ class PixivSearchPlugin(Star):
             msg += f"{k}: {self.config.get(k, '未设置')}\n"
         yield event.plain_result(msg)
 
-    @command("pixiv_deepsearch")
-    async def pixiv_deepsearch(self, event: AstrMessageEvent, tags: str):
+    @pixiv.command("deepsearch")
+    async def deepsearch(self, event: AstrMessageEvent, tags: str):
         """
         深度搜索 Pixiv 插画，通过翻页获取多页结果
-        用法: /pixiv_deepsearch <标签1>,<标签2>,...
+        用法: /pixiv deepsearch <标签1>,<标签2>,...
         注意: 翻页深度由配置中的 deep_search_depth 参数控制
         """
         # 验证用户输入
         if not tags or tags.strip().lower() == "help":
             yield event.plain_result(
-                "用法: /pixiv_deepsearch <标签1>,<标签2>,...\n"
+                "用法: /pixiv deepsearch <标签1>,<标签2>,...\n"
                 "深度搜索 Pixiv 插画，将遍历多个结果页面。\n"
                 "支持排除标签功能，使用 -<标签> 来排除特定标签。\n"
                 f"当前翻页深度设置: {self.deep_search_depth} 页 (-1 表示获取所有页面)"
@@ -1367,9 +1371,9 @@ class PixivSearchPlugin(Star):
 
             logger.error(traceback.format_exc())
 
-    @command("pixiv_and")
-    async def pixiv_and(self, event: AstrMessageEvent, tags: str = ""):
-        """处理 /pixiv_and 命令，进行 AND 逻辑深度搜索"""
+    @pixiv.command("and")
+    async def and_search(self, event: AstrMessageEvent, tags: str = ""):
+        """处理 /pixiv and 命令，进行 AND 逻辑深度搜索"""
         # 清理标签字符串
         cleaned_tags = tags.strip()
 
@@ -1378,7 +1382,7 @@ class PixivSearchPlugin(Star):
                 "Pixiv 插件 (AND)：用户未提供搜索标签或标签为空，返回帮助信息。"
             )
             yield event.plain_result(
-                "请输入要进行 AND 搜索的标签 (用逗号分隔)。使用 `/pixiv_help` 查看帮助。\n"
+                "请输入要进行 AND 搜索的标签 (用逗号分隔)。使用 `/pixiv help` 查看帮助。\n"
                 "支持排除标签功能，使用 -<标签> 来排除特定标签。\n\n"
                 "**配置说明**:\n1. 先配置代理->[Astrbot代理配置教程](https://astrbot.app/config/astrbot-config.html#http-proxy);\n2. 再填入 `refresh_token`->**Pixiv Refresh Token**: 必填，用于 API 认证。获取方法请参考 [pixivpy3 文档](https://pypi.org/project/pixivpy3/) 或[这里](https://gist.github.com/karakoo/5e7e0b1f3cc74cbcb7fce1c778d3709e)。"
             )
@@ -1576,13 +1580,13 @@ class PixivSearchPlugin(Star):
 
             logger.error(traceback.format_exc())
 
-    @command("pixiv_specific")
-    async def pixiv_specific(self, event: AstrMessageEvent, illust_id: str = ""):
+    @pixiv.command("id")
+    async def id(self, event: AstrMessageEvent, illust_id: str = ""):
         """根据作品 ID 获取特定作品详情"""
         # 检查是否提供了作品 ID
         if not illust_id:
             yield event.plain_result(
-                "请输入要查询的作品 ID。使用 `/pixiv_help` 查看帮助。"
+                "请输入要查询的作品 ID。使用 `/pixiv help` 查看帮助。"
             )
             return
 

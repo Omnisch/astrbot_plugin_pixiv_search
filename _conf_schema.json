@@ -7,6 +7,13 @@
       "is_sensitive": true,
       "required": true
   },
+  "proxy_url": {
+      "description": "代理服务器地址",
+      "type": "string",
+      "hint": "如果需要通过代理访问 Pixiv API，请在此处填写代理地址。",
+      "default": "",
+      "is_sensitive": false
+  },
   "return_count": {
       "description": "每次搜索返回的图片数量",
       "type": "int",

@@ -40,6 +40,7 @@ class PixivSearchPlugin(Star):
         self.config = config
         self.client = AppPixivAPI()
         self.refresh_token = self.config.get("refresh_token", None)
+        self.proxy_url = self.config.get("proxy_url", None)
         self.return_count = self.config.get("return_count", 1)
         self.r18_mode = self.config.get("r18_mode", "过滤 R18")
         self.ai_filter_mode = self.config.get("ai_filter_mode", "过滤 AI 作品")
@@ -193,7 +194,7 @@ class PixivSearchPlugin(Star):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    image_url, headers={"Referer": "https://app-api.pixiv.net/"}
+                    image_url, headers={"Referer": "https://app-api.pixiv.net/"}, proxy=self.proxy_url
                 ) as response:
                     if response.status == 200:
                         img_data = await response.read()
